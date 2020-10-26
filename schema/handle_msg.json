@@ -45,7 +45,7 @@
           "type": "object",
           "required": [
             "quantity",
-            "to_address_str"
+            "to_address"
           ],
           "properties": {
             "quantity": {
@@ -54,8 +54,8 @@
                 "$ref": "#/definitions/Coin"
               }
             },
-            "to_address_str": {
-              "type": "string"
+            "to_address": {
+              "$ref": "#/definitions/HumanAddr"
             }
           }
         }
@@ -77,6 +77,9 @@
           "type": "string"
         }
       }
+    },
+    "HumanAddr": {
+      "type": "string"
     },
     "Uint128": {
       "type": "string"

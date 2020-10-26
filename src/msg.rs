@@ -34,6 +34,7 @@ pub enum HandleMsg {
 pub enum QueryMsg {
     /// Returns a human-readable representation of the arbiter.
     Arbiter {},
+    Validators {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
