@@ -1,7 +1,7 @@
 use cosmwasm_std::{
     log, to_binary, Api, BankMsg, Binary, CanonicalAddr, Coin, CosmosMsg, Env, Extern,
-    HandleResponse, HandleResult, HumanAddr, InitResponse, InitResult, Querier, StdError,
-    StdResult, Storage,
+    HandleResponse, HandleResult, HumanAddr, InitResponse, InitResult, Querier, QueryRequest,
+    StakingQuery, StdError, StdResult, Storage, ValidatorsResponse,
 };
 
 use crate::msg::{ArbiterResponse, HandleMsg, InitMsg, QueryMsg};
@@ -143,7 +143,17 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<Binary> {
     match msg {
         QueryMsg::Arbiter {} => to_binary(&query_arbiter(deps)?),
+        QueryMsg::Validators {} => to_binary(&query_validators(deps)?),
     }
+}
+
+fn query_validators<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+) -> StdResult<ValidatorsResponse> {
+    let validators = deps
+        .querier
+        .query(&QueryRequest::Staking(StakingQuery::Validators {}))?;
+    Ok(ValidatorsResponse { validators })
 }
 
 fn query_arbiter<S: Storage, A: Api, Q: Querier>(
