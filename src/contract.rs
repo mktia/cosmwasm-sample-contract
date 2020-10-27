@@ -160,10 +160,6 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
 fn query_validators<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
 ) -> StdResult<Vec<Validator>> {
-    // let validators = deps
-    //     .querier
-    //     .query(&QueryRequest::Staking(StakingQuery::Validators {}.into()))?;
-    // Ok(ValidatorsResponse { validators })
     let request = StakingQuery::Validators {}.into();
     let res: ValidatorsResponse = deps.querier.query(&QueryRequest::Staking(request))?;
     Ok(res.validators)
