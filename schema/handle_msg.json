@@ -38,14 +38,24 @@
     {
       "type": "object",
       "required": [
-        "send_test"
+        "deposit"
       ],
       "properties": {
-        "send_test": {
+        "deposit": {
+          "type": "object"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "withdraw"
+      ],
+      "properties": {
+        "withdraw": {
           "type": "object",
           "required": [
-            "quantity",
-            "to_address"
+            "quantity"
           ],
           "properties": {
             "quantity": {
@@ -53,9 +63,6 @@
               "items": {
                 "$ref": "#/definitions/Coin"
               }
-            },
-            "to_address": {
-              "$ref": "#/definitions/HumanAddr"
             }
           }
         }
@@ -77,9 +84,6 @@
           "type": "string"
         }
       }
-    },
-    "HumanAddr": {
-      "type": "string"
     },
     "Uint128": {
       "type": "string"

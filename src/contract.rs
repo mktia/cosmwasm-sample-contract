@@ -39,23 +39,24 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     match msg {
         HandleMsg::Approve { quantity } => try_approve(deps, env, state, info, quantity),
         HandleMsg::Refund {} => try_refund(deps, env, state),
-        HandleMsg::SendTest {
-            quantity,
-            to_address,
-        } => try_send(env, quantity, to_address),
+        HandleMsg::Deposit {} => deposit(env, info),
+        HandleMsg::Withdraw { quantity } => withdraw(env, info, quantity),
     }
 }
 
 fn try_send(
-    env: Env,
     quantity: Vec<Coin>,
+    from_address: HumanAddr,
     to_address: HumanAddr,
+    action: &str,
 ) -> Result<HandleResponse, ContractError> {
-    let from_address = env.contract.address;
     let amount = quantity;
     let attributes = vec![
-        attr("action", "send_test"),
+        attr("action", action),
+        attr("from", &from_address.as_str()),
         attr("to", &to_address.as_str()),
+        attr("amount", &amount[0].amount),
+        attr("denom", &amount[0].denom),
     ];
 
     let r = HandleResponse {
@@ -68,6 +69,38 @@ fn try_send(
         data: None,
     };
     Ok(r)
+}
+
+fn deposit(env: Env, info: MessageInfo) -> Result<HandleResponse, ContractError> {
+    let from_address = info.sender;
+    let to_address = env.contract.address;
+    let quantity: Vec<Coin> = info.sent_funds;
+
+    let attributes = vec![
+        attr("action", "deposit"),
+        attr("from", from_address),
+        attr("to", to_address),
+        attr("amount", &quantity[0].amount),
+        attr("denom", &quantity[0].denom),
+    ];
+
+    let r = HandleResponse {
+        messages: vec![],
+        attributes,
+        data: None,
+    };
+    Ok(r)
+}
+
+fn withdraw(
+    env: Env,
+    info: MessageInfo,
+    quantity: Vec<Coin>,
+) -> Result<HandleResponse, ContractError> {
+    let from_address = env.contract.address;
+    let to_address = info.sender;
+
+    try_send(quantity, from_address, to_address, "withdraw")
 }
 
 fn try_approve<S: Storage, A: Api, Q: Querier>(

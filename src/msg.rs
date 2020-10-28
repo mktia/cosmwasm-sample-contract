@@ -23,9 +23,9 @@ pub enum HandleMsg {
         quantity: Option<Vec<Coin>>,
     },
     Refund {},
-    SendTest {
+    Deposit {},
+    Withdraw {
         quantity: Vec<Coin>,
-        to_address: HumanAddr,
     },
 }
 
@@ -40,9 +40,4 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ArbiterResponse {
     pub arbiter: HumanAddr,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct ValidatorsResponse {
-    pub validators: Vec<Validator>,
 }
