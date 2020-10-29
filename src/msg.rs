@@ -35,6 +35,10 @@ pub enum QueryMsg {
     /// Returns a human-readable representation of the arbiter.
     Arbiter {},
     Validators {},
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct BalanceResponse {
+    pub balance: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

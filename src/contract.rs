@@ -1,12 +1,12 @@
 use cosmwasm_std::{
     attr, to_binary, Api, BankMsg, Binary, Coin, CosmosMsg, Env, Extern, HandleResponse, HumanAddr,
     InitResponse, InitResult, MessageInfo, Querier, QueryRequest, StakingQuery, StdError,
-    StdResult, Storage, Validator, ValidatorsResponse,
+    StdResult, Storage, Uint128, Validator, ValidatorsResponse,
 };
 
 use crate::error::ContractError;
-use crate::msg::{ArbiterResponse, HandleMsg, InitMsg, QueryMsg};
-use crate::state::{config, config_read, State};
+use crate::msg::{ArbiterResponse, BalanceResponse, HandleMsg, InitMsg, QueryMsg};
+use crate::state::{balances, balances_read, config, config_read, State};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -39,8 +39,8 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     match msg {
         HandleMsg::Approve { quantity } => try_approve(deps, env, state, info, quantity),
         HandleMsg::Refund {} => try_refund(deps, env, state),
-        HandleMsg::Deposit {} => deposit(env, info),
-        HandleMsg::Withdraw { quantity } => withdraw(env, info, quantity),
+        HandleMsg::Deposit {} => deposit(deps, env, info),
+        HandleMsg::Withdraw { quantity } => withdraw(deps, env, info, quantity),
     }
 }
 
@@ -52,7 +52,7 @@ fn try_send(
 ) -> Result<HandleResponse, ContractError> {
     let amount = quantity;
     let attributes = vec![
-        attr("action", action),
+        attr("action", &action),
         attr("from", &from_address.as_str()),
         attr("to", &to_address.as_str()),
         attr("amount", &amount[0].amount),
@@ -71,18 +71,30 @@ fn try_send(
     Ok(r)
 }
 
-fn deposit(env: Env, info: MessageInfo) -> Result<HandleResponse, ContractError> {
+fn deposit<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+    info: MessageInfo,
+) -> Result<HandleResponse, ContractError> {
     let from_address = info.sender;
     let to_address = env.contract.address;
     let quantity: Vec<Coin> = info.sent_funds;
 
     let attributes = vec![
         attr("action", "deposit"),
-        attr("from", from_address),
-        attr("to", to_address),
+        attr("from", &from_address.as_str()),
+        attr("to", &to_address.as_str()),
         attr("amount", &quantity[0].amount),
         attr("denom", &quantity[0].denom),
     ];
+
+    let sender_raw = deps.api.canonical_address(&from_address)?;
+    let amount = quantity[0].amount;
+    let mut accounts = balances(&mut deps.storage);
+    accounts.update(
+        sender_raw.as_slice(),
+        |balance: Option<Uint128>| -> StdResult<_> { Ok(balance.unwrap_or_default() + amount) },
+    )?;
 
     let r = HandleResponse {
         messages: vec![],
@@ -92,13 +104,21 @@ fn deposit(env: Env, info: MessageInfo) -> Result<HandleResponse, ContractError>
     Ok(r)
 }
 
-fn withdraw(
+fn withdraw<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
     env: Env,
     info: MessageInfo,
     quantity: Vec<Coin>,
 ) -> Result<HandleResponse, ContractError> {
     let from_address = env.contract.address;
     let to_address = info.sender;
+
+    let recipient_raw = deps.api.canonical_address(&to_address)?;
+    let amount = &quantity[0].amount;
+    let mut accounts = balances(&mut deps.storage);
+    accounts.update(recipient_raw.as_slice(), |balance: Option<Uint128>| {
+        balance.unwrap_or_default() - amount
+    })?;
 
     try_send(quantity, from_address, to_address, "withdraw")
 }
