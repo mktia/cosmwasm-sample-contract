@@ -1,9 +1,14 @@
-use cosmwasm_std::{CanonicalAddr, Env, Storage};
-use cosmwasm_storage::{singleton, singleton_read, ReadonlySingleton, Singleton};
+use cosmwasm_std::{CanonicalAddr, Env, Storage, Uint128};
+use cosmwasm_storage::{
+    bucket, bucket_read, singleton, singleton_read, Bucket, ReadonlyBucket, ReadonlySingleton,
+    Singleton,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 static CONFIG_KEY: &[u8] = b"config";
+
+pub const PREFIX_BALANCE: &[u8] = b"balance";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
@@ -30,6 +35,14 @@ impl State {
 
         false
     }
+}
+
+pub fn balances<S: Storage>(storage: &mut S) -> Bucket<S, Uint128> {
+    bucket(storage, PREFIX_BALANCE)
+}
+
+pub fn balances_read<S: Storage>(storage: &S) -> ReadonlyBucket<S, Uint128> {
+    bucket_read(storage, PREFIX_BALANCE)
 }
 
 pub fn config<S: Storage>(storage: &mut S) -> Singleton<S, State> {
