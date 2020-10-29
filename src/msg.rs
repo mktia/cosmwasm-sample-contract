@@ -1,4 +1,4 @@
-use cosmwasm_std::{Coin, HumanAddr, Validator};
+use cosmwasm_std::{Coin, HumanAddr, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -35,6 +35,10 @@ pub enum QueryMsg {
     /// Returns a human-readable representation of the arbiter.
     Arbiter {},
     Validators {},
+    Balance {
+        address: HumanAddr,
+    },
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BalanceResponse {

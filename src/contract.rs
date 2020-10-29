@@ -207,7 +207,19 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
     match msg {
         QueryMsg::Arbiter {} => to_binary(&query_arbiter(deps)?),
         QueryMsg::Validators {} => to_binary(&query_validators(deps)?),
+        QueryMsg::Balance { address } => to_binary(&query_balances(deps, address)?),
     }
+}
+
+fn query_balances<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+    address: HumanAddr,
+) -> StdResult<BalanceResponse> {
+    let address_raw = deps.api.canonical_address(&address)?;
+    let balance = balances_read(&deps.storage)
+        .may_load(address_raw.as_slice())?
+        .unwrap_or_default();
+    Ok(BalanceResponse { balance })
 }
 
 fn query_validators<S: Storage, A: Api, Q: Querier>(
